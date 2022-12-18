@@ -1,3 +1,5 @@
+package de.ossi.pojo;
+
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
@@ -34,10 +36,17 @@ public class PojoMaker<B> {
     }
 
     public <T> PojoMaker<B> withValue(Class<T> clazz, String propertyName, Supplier<T> supplier) {
+        checkPropertyName(propertyName);
         PropertySupplier<T> newSupplier = new PropertySupplier<>(clazz, propertyName, supplier);
         propertySuppliers.remove(newSupplier);
         propertySuppliers.add(newSupplier);
         return this;
+    }
+
+    private void checkPropertyName(String propertyName) {
+        if (NO_NAME.equals(propertyName)) {
+            throw new PropertyNameException("The PropertNname can not be empty.");
+        }
     }
 
     public B make() {

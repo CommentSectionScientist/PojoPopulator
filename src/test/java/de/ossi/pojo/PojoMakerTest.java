@@ -1,3 +1,5 @@
+package de.ossi.pojo;
+
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -80,5 +82,15 @@ class PojoMakerTest {
         Assertions.assertThat(employee)
                 .extracting(Employee::getSalary, Employee::isActive)
                 .containsExactly(2.0, true);
+    }
+
+    @Test
+    void emptyPropertyNameShouldThrowException() {
+        //given
+        //when
+        //then
+        Assertions.assertThatException().isThrownBy(() ->
+                        new PojoMaker<>(Employee.class).withValue(String.class, "", () -> "asd"))
+                .isInstanceOf(PropertyNameException.class);
     }
 }

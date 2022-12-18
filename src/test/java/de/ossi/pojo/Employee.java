@@ -1,3 +1,5 @@
+package de.ossi.pojo;
+
 import java.time.LocalDateTime;
 
 @SuppressWarnings("unused")

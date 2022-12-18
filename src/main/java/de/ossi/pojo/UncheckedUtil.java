@@ -1,3 +1,5 @@
+package de.ossi.pojo;
+
 import java.util.function.Consumer;
 
 public class UncheckedUtil {
