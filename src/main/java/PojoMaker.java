@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 /**
  * TODO doesnt work with records, because their setters dont have the "set" Prefix
  * TODO Inheritance isnt supported
- * TODO Should primitves and their warppers be handled differently?
+ * TODO Should primitves and their wrappers be handled differently?
  */
 public class PojoMaker<B> {
 
@@ -26,7 +26,7 @@ public class PojoMaker<B> {
 
     public PojoMaker(Class<B> beanClass) {
         this.beanClass = beanClass;
-        setters = readAllSetters(beanClass);
+        setters = getAllSetters(beanClass);
     }
 
     public <T> PojoMaker<B> withValue(Class<T> clazz, Supplier<T> supplier) {
@@ -34,7 +34,9 @@ public class PojoMaker<B> {
     }
 
     public <T> PojoMaker<B> withValue(Class<T> clazz, String propertyName, Supplier<T> supplier) {
-        propertySuppliers.add(new PropertySupplier<>(clazz, propertyName, supplier));
+        PropertySupplier<T> newSupplier = new PropertySupplier<>(clazz, propertyName, supplier);
+        propertySuppliers.remove(newSupplier);
+        propertySuppliers.add(newSupplier);
         return this;
     }
 
@@ -77,7 +79,7 @@ public class PojoMaker<B> {
     }
 
 
-    private List<Setter> readAllSetters(Class<B> beanClass) {
+    private List<Setter> getAllSetters(Class<B> beanClass) {
         return Arrays.stream(beanClass.getMethods())
                 .filter(this::isSetter)
                 .map(m -> new Setter(m.getParameterTypes()[0], m))
@@ -111,6 +113,17 @@ public class PojoMaker<B> {
     }
 
     private record PropertySupplier<T>(Type type, String propertyName, Supplier<T> supplier) {
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            PropertySupplier<?> that = (PropertySupplier<?>) o;
+            return Objects.equals(type, that.type) && Objects.equals(propertyName, that.propertyName);
+        }
 
+        @Override
+        public int hashCode() {
+            return Objects.hash(type, propertyName);
+        }
     }
 }

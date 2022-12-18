@@ -55,7 +55,7 @@ class PojoMakerTest {
     }
 
     @Test
-    void assigningTheSameClassTwiceShouldUseSecond() {
+    void assigningTheSameClassTwiceShouldThrowException() {
         //given
         //when
         Employee employee = new PojoMaker<>(Employee.class)
