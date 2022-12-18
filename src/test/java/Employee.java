@@ -9,6 +9,15 @@ public class Employee {
     private Integer id;
     private LocalDateTime startTime;
     private double salary;
+    private boolean active;
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
 
     public String getSetProperty() {
         return setProperty;

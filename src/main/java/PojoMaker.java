@@ -1,5 +1,6 @@
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Type;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.Function;
@@ -8,13 +9,15 @@ import java.util.stream.Collectors;
 
 /**
  * TODO doesnt work with records, because their setters dont have the "set" Prefix
- * TODO primitve Types
  * TODO Inheritance isnt supported
+ * TODO Should primitves and their warppers be handled differently?
  */
 public class PojoMaker<B> {
 
-    private static final String DEFAULT_STRING = "string";
-    private static final Number DEFAULT_NUMBER = 1;
+    public static final String DEFAULT_STRING = "string";
+    public static final Number DEFAULT_NUMBER = 1;
+    public static final LocalDateTime DEFAULT_LOCALDATETIME = LocalDateTime.of(1970, 1, 1, 1, 1);
+
     private static final String SETTER_PREFIX = "set";
     private static final String NO_NAME = "";
     private final Class<B> beanClass;
@@ -25,7 +28,6 @@ public class PojoMaker<B> {
         this.beanClass = beanClass;
         setters = readAllSetters(beanClass);
     }
-
 
     public <T> PojoMaker<B> withValue(Class<T> clazz, Supplier<T> supplier) {
         return withValue(clazz, NO_NAME, supplier);
@@ -61,7 +63,7 @@ public class PojoMaker<B> {
 
     private Optional<PropertySupplier<?>> getPropertySupplier(Setter setter) {
         List<PropertySupplier<?>> equalClassSuppliers = propertySuppliers.stream()
-                .filter(s -> s.clazz == setter.clazz)
+                .filter(s -> s.type == setter.type)
                 .toList();
         Optional<PropertySupplier<?>> equalFieldNameSupplier = equalClassSuppliers.stream().
                 filter(p -> p.propertyName.equals(setter.toPropertyName())).findAny();
@@ -88,23 +90,27 @@ public class PojoMaker<B> {
 
     private Set<PropertySupplier<?>> initDefaultPropertySuppliers() {
         Set<PropertySupplier<?>> defaultPropertySupplier = new HashSet<>();
+
         defaultPropertySupplier.add(new PropertySupplier<>(Integer.class, NO_NAME, DEFAULT_NUMBER::intValue));
         defaultPropertySupplier.add(new PropertySupplier<>(Long.class, NO_NAME, DEFAULT_NUMBER::longValue));
         defaultPropertySupplier.add(new PropertySupplier<>(Double.class, NO_NAME, DEFAULT_NUMBER::doubleValue));
         defaultPropertySupplier.add(new PropertySupplier<>(Float.class, NO_NAME, DEFAULT_NUMBER::floatValue));
+
+        defaultPropertySupplier.add(new PropertySupplier<>(Boolean.class, NO_NAME, () -> false));
+
         defaultPropertySupplier.add(new PropertySupplier<>(String.class, NO_NAME, () -> DEFAULT_STRING));
-        defaultPropertySupplier.add(new PropertySupplier<>(LocalDateTime.class, NO_NAME, LocalDateTime::now));
+        defaultPropertySupplier.add(new PropertySupplier<>(LocalDateTime.class, NO_NAME, () -> DEFAULT_LOCALDATETIME));
         return defaultPropertySupplier;
     }
 
-    private record Setter(Class<?> clazz, Method setter) {
+    private record Setter(Type type, Method setter) {
         String toPropertyName() {
             String nameWithoutSetPrefix = setter.getName().replaceFirst(SETTER_PREFIX, "");
             return Character.toLowerCase(nameWithoutSetPrefix.charAt(0)) + nameWithoutSetPrefix.substring(1);
         }
     }
 
-    private record PropertySupplier<T>(Class<T> clazz, String propertyName, Supplier<T> supplier) {
+    private record PropertySupplier<T>(Type type, String propertyName, Supplier<T> supplier) {
 
     }
 }

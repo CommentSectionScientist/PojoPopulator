@@ -1,8 +1,5 @@
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-
-import java.time.LocalDateTime;
 
 class PojoMakerTest {
 
@@ -14,7 +11,7 @@ class PojoMakerTest {
         //then
         Assertions.assertThat(employee)
                 .extracting(Employee::getId, Employee::getFirstname)
-                .containsExactly(1, "string");
+                .containsExactly(1, PojoMaker.DEFAULT_STRING);
     }
 
     @Test
@@ -28,7 +25,7 @@ class PojoMakerTest {
         //then
         Assertions.assertThat(employee)
                 .extracting(Employee::getFirstname, Employee::getLastname, Employee::getCity)
-                .containsExactly("firstname1", "lastname1", "string");
+                .containsExactly("firstname1", "lastname1", PojoMaker.DEFAULT_STRING);
     }
 
     @Test
@@ -39,8 +36,9 @@ class PojoMakerTest {
                 .withValue(Integer.class, () -> 1)
                 .make();
         //then
-        Assertions.assertThat(employee.getStartTime())
-                .isEqualToIgnoringMinutes(LocalDateTime.now());
+        Assertions.assertThat(employee)
+                .extracting(Employee::getStartTime)
+                .isEqualTo(PojoMaker.DEFAULT_LOCALDATETIME);
     }
 
     @Test
@@ -70,18 +68,17 @@ class PojoMakerTest {
                 .isEqualTo("2");
     }
 
-    @Disabled("NotYetImplemented")
     @Test
     void primitiveInBeanShouldBePopulated() {
         //given
         //when
         Employee employee = new PojoMaker<>(Employee.class)
-                .withValue(Integer.class, () -> 1)
+                .withValue(double.class, () -> 2.0)
+                .withValue(boolean.class, "active", () -> true)
                 .make();
         //then
         Assertions.assertThat(employee)
-                .extracting(Employee::getSalary)
-                .isEqualTo(3.0);
+                .extracting(Employee::getSalary, Employee::isActive)
+                .containsExactly(2.0, true);
     }
-
 }
