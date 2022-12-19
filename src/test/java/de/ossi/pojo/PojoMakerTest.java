@@ -114,4 +114,60 @@ class PojoMakerTest {
                 .extracting(Employee::getFirstname, Employee::getLastname)
                 .containsExactly(DEFAULT_STRING, "lastname1");
     }
+
+    @Test
+    void setterMethodWithoutPrefixShouldBePopulated() {
+        //given
+        //when
+        Employee employee = new PojoMaker<>(Employee.class)
+                .withPropertyValue(String.class, "noPrefix", () -> "asd")
+                .usingNoSetterPrefix()
+                .make();
+        //then
+        Assertions.assertThat(employee)
+                .extracting(Employee::noPrefix)
+                .isEqualTo("asd");
+    }
+
+    @Test
+    void setterMethodWithoutPrefixShouldBePopulatedByDefault() {
+        //given
+        //when
+        Employee employee = new PojoMaker<>(Employee.class)
+                .usingNoSetterPrefix()
+                .make();
+        //then
+        Assertions.assertThat(employee)
+                .extracting(Employee::noPrefix)
+                .isEqualTo(DEFAULT_STRING);
+    }
+
+    @Test
+    void setterMethodWithDifferentPrefixShouldBePopulated() {
+        //given
+        //when
+        Employee employee = new PojoMaker<>(Employee.class)
+                .withPropertyValue(String.class, "differentPrefix", () -> "asd")
+                .usingSetterPrefix("setze")
+                .make();
+        //then
+        Assertions.assertThat(employee)
+                .extracting(Employee::holeDifferentPrefix)
+                .isEqualTo("asd");
+    }
+
+    @Test
+    void setterMethodWithDifferentPrefixShouldBePopulatedByDefault() {
+        //given
+        //when
+        Employee employee = new PojoMaker<>(Employee.class)
+                .usingSetterPrefix("setze")
+                .make();
+        //then
+        Assertions.assertThat(employee)
+                .extracting(Employee::holeDifferentPrefix)
+                .isEqualTo(DEFAULT_STRING);
+    }
+
+
 }

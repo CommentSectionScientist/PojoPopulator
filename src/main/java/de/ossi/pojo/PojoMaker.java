@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
  * TODO Should primitves and their wrappers be handled differently?
  * TODO option to set setter method prefix
  * TODO use lombok
+ * TODO verschachtelte POJOs
  */
 public class PojoMaker<B> {
 
@@ -22,16 +23,16 @@ public class PojoMaker<B> {
     public static final Number DEFAULT_NUMBER = 1;
     public static final LocalDateTime DEFAULT_LOCALDATETIME = LocalDateTime.of(1970, 1, 1, 1, 1);
 
-    private static final String SETTER_PREFIX = "set";
+    private static final String DEFAULT_SETTER_PREFIX = "set";
     private static final String NO_NAME = "";
     private final Class<B> beanClass;
     private final Set<PropertySupplier<?>> propertySuppliers = new HashSet<>();
-    private final List<Setter> setters;
+    private final List<Setter> setters = new ArrayList<>();
     private boolean usingDefaultSuppliers = true;
+    private String setterPrefix = DEFAULT_SETTER_PREFIX;
 
     public PojoMaker(Class<B> beanClass) {
         this.beanClass = beanClass;
-        setters = getAllSetters(beanClass);
     }
 
     /**
@@ -91,6 +92,16 @@ public class PojoMaker<B> {
         return this;
     }
 
+    public PojoMaker<B> usingSetterPrefix(String setterPrefix) {
+        this.setterPrefix = setterPrefix;
+        return this;
+    }
+
+    public PojoMaker<B> usingNoSetterPrefix() {
+        this.setterPrefix = "";
+        return this;
+    }
+
     /**
      * Populates the bean property fields with the suppliers provided or default suppliers of not otherwise specified.
      * The NoArgs Constructor has to be public accessable or a {@link RuntimeException} may be thrown.
@@ -101,6 +112,7 @@ public class PojoMaker<B> {
      * @see Method#invoke(Object, Object...)
      */
     public B make() {
+        setters.addAll(getAllSetters(beanClass));
         try {
             B bean = beanClass.getDeclaredConstructor().newInstance();
             populate(bean);
@@ -138,7 +150,7 @@ public class PojoMaker<B> {
                 .filter(s -> s.type == setter.type)
                 .toList();
         Optional<PropertySupplier<?>> equalFieldNameSupplier = equalClassSuppliers.stream().
-                filter(p -> p.propertyName.equals(setter.toPropertyName())).findAny();
+                filter(p -> p.propertyName.equals(toPropertyName(setter))).findAny();
         if (equalFieldNameSupplier.isPresent()) {
             return equalFieldNameSupplier;
         }
@@ -157,7 +169,7 @@ public class PojoMaker<B> {
     }
 
     private boolean isSetter(Method method) {
-        return method.getName().startsWith(SETTER_PREFIX) && method.getParameterCount() == 1;
+        return method.getName().startsWith(setterPrefix) && method.getParameterCount() == 1;
     }
 
     private Set<PropertySupplier<?>> createDefaultPropertySuppliers() {
@@ -175,16 +187,18 @@ public class PojoMaker<B> {
         return defaultPropertySupplier;
     }
 
+    /**
+     * Tries to find the porpertyname from the name of its setter method name.
+     * Presumes, that the setter method has a SETTER_PREFIX following by an upper case letter followed by the name of the property.
+     */
+    String toPropertyName(Setter setter) {
+        String nameWithoutSetPrefix = setter.setter.getName().replaceFirst(setterPrefix, "");
+        return Character.toLowerCase(nameWithoutSetPrefix.charAt(0)) + nameWithoutSetPrefix.substring(1);
+    }
+
 
     private record Setter(Type type, Method setter) {
-        /**
-         * Tries to find the porpertyname from the name of its setter method name.
-         * Presumes, that the setter method has a SETTER_PREFIX following by an upper case letter followed by the name of the property.
-         */
-        String toPropertyName() {
-            String nameWithoutSetPrefix = setter.getName().replaceFirst(SETTER_PREFIX, "");
-            return Character.toLowerCase(nameWithoutSetPrefix.charAt(0)) + nameWithoutSetPrefix.substring(1);
-        }
+
     }
 
     private record PropertySupplier<T>(Type type, String propertyName, Supplier<T> supplier) {

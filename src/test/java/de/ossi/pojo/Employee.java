@@ -12,6 +12,33 @@ public class Employee {
     private LocalDateTime startTime;
     private double salary;
     private boolean active;
+    private String noPrefix;
+    private String differentPrefix;
+    private Employee supervisor;
+
+    public Employee getSupervisor() {
+        return supervisor;
+    }
+
+    public void setSupervisor(Employee supervisor) {
+        this.supervisor = supervisor;
+    }
+
+    public String holeDifferentPrefix() {
+        return differentPrefix;
+    }
+
+    public void setzeDifferentPrefix(String differentPrefix) {
+        this.differentPrefix = differentPrefix;
+    }
+
+    public String noPrefix() {
+        return noPrefix;
+    }
+
+    public void noPrefix(String noPrefix) {
+        this.noPrefix = noPrefix;
+    }
 
     public boolean isActive() {
         return active;
