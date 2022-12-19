@@ -12,7 +12,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
- * TODO Inheritance isnt supported
+ * TODO Inheritance isn't supported
  */
 public class PojoMaker<B> {
 
@@ -22,8 +22,6 @@ public class PojoMaker<B> {
     private static final String DEFAULT_SETTER_PREFIX = "set";
 
     private final Set<PropertySupplier<?>> propertySuppliers = new HashSet<>();
-    private final List<Setter> setters = new ArrayList<>();
-
     private final Class<B> beanClass;
     private boolean usingDefaultSuppliers = true;
     private String setterPrefix = DEFAULT_SETTER_PREFIX;
@@ -101,7 +99,7 @@ public class PojoMaker<B> {
 
     /**
      * Populates the bean property fields with the suppliers provided or default suppliers of not otherwise specified.
-     * The NoArgs Constructor has to be public accessable or a {@link RuntimeException} may be thrown.
+     * The NoArgs Constructor has to be public accessible or a {@link RuntimeException} may be thrown.
      * Invokes all Setters per Reflection.
      *
      * @see Class#getDeclaredConstructor(Class[])
@@ -109,7 +107,6 @@ public class PojoMaker<B> {
      * @see Method#invoke(Object, Object...)
      */
     public B make() {
-        setters.addAll(getAllSetters(beanClass));
         try {
             B bean = beanClass.getDeclaredConstructor().newInstance();
             populate(bean);
@@ -125,13 +122,14 @@ public class PojoMaker<B> {
             //Set only adds if no other supplier is already present
             propertySuppliers.addAll(createDefaultPropertySuppliers());
         }
-        Map<Setter, Optional<PropertySupplier<?>>> settersToPopulate = setters.stream()
+        Map<Setter, Optional<PropertySupplier<?>>> settersToPopulate = getAllSetters(beanClass).stream()
                 //cant have duplicate keys, because a class can only have on methode with the same name
                 .collect(Collectors.toMap(Function.identity(), this::getPropertySupplier));
         settersToPopulate.entrySet()
                 .forEach(UncheckedUtil.unchecked(e -> {
                     if (e.getValue().isPresent()) {
-                        e.getKey().setter.invoke(bean, e.getValue().get().supplier.get());
+                        Object suppliedValue = e.getValue().get().supplier.get();
+                        e.getKey().setter.invoke(bean, suppliedValue);
                     }
                 }));
     }
@@ -186,8 +184,8 @@ public class PojoMaker<B> {
     }
 
     /**
-     * Tries to find the porpertyname from the name of its setter method name.
-     * Presumes, that the setter method has a SETTER_PREFIX following by an upper case letter followed by the name of the property.
+     * Tries to find the property name from the name of its setter method name.
+     * Presumes, that the setter method has a SETTER_PREFIX followed by an upper case letter followed by the name of the property.
      */
     String toPropertyName(Setter setter) {
         String nameWithoutSetPrefix = setter.setter.getName().replaceFirst(setterPrefix, "");
