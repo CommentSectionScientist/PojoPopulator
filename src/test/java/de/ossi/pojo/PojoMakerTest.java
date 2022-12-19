@@ -3,17 +3,19 @@ package de.ossi.pojo;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import static de.ossi.pojo.PojoMaker.*;
+
 class PojoMakerTest {
 
     @Test
     void beanShouldBePopulatedWithDefaultValues() {
         //given
         //when
-        Employee employee = new PojoMaker<>(Employee.class).withValue(Integer.class, () -> 1).make();
+        Employee employee = new PojoMaker<>(Employee.class).make();
         //then
         Assertions.assertThat(employee)
-                .extracting(Employee::getId, Employee::getFirstname)
-                .containsExactly(1, PojoMaker.DEFAULT_STRING);
+                .extracting(Employee::getId, Employee::getFirstname, Employee::getStartTime)
+                .containsExactly(DEFAULT_NUMBER, DEFAULT_STRING, DEFAULT_LOCALDATETIME);
     }
 
     @Test
@@ -27,20 +29,7 @@ class PojoMakerTest {
         //then
         Assertions.assertThat(employee)
                 .extracting(Employee::getFirstname, Employee::getLastname, Employee::getCity)
-                .containsExactly("firstname1", "lastname1", PojoMaker.DEFAULT_STRING);
-    }
-
-    @Test
-    void dateInBeanShouldBePopulated() {
-        //given
-        //when
-        Employee employee = new PojoMaker<>(Employee.class)
-                .withValue(Integer.class, () -> 1)
-                .make();
-        //then
-        Assertions.assertThat(employee)
-                .extracting(Employee::getStartTime)
-                .isEqualTo(PojoMaker.DEFAULT_LOCALDATETIME);
+                .containsExactly("firstname1", "lastname1", DEFAULT_STRING);
     }
 
     @Test
@@ -92,5 +81,37 @@ class PojoMakerTest {
         Assertions.assertThatException().isThrownBy(() ->
                         new PojoMaker<>(Employee.class).withValue(String.class, "", () -> "asd"))
                 .isInstanceOf(PropertyNameException.class);
+    }
+
+    @Test
+    void whenUsingNoDefaultSuppliersShouldNotPopulateBean() {
+        //given
+        //when
+        Employee employee = new PojoMaker<>(Employee.class)
+                .withValue(String.class, "lastname", () -> "lastname1")
+                .usingNoDefaultSuppliers()
+                .usingDefaultSuppliers()
+                .usingNoDefaultSuppliers()
+                .make();
+        //then
+        Assertions.assertThat(employee)
+                .extracting(Employee::getFirstname, Employee::getLastname)
+                .containsExactly(null, "lastname1");
+    }
+
+    @Test
+    void whenUsingDefaultSuppliersShouldPopulateBean() {
+        //given
+        //when
+        Employee employee = new PojoMaker<>(Employee.class)
+                .withValue(String.class, "lastname", () -> "lastname1")
+                .usingDefaultSuppliers()
+                .usingNoDefaultSuppliers()
+                .usingDefaultSuppliers()
+                .make();
+        //then
+        Assertions.assertThat(employee)
+                .extracting(Employee::getFirstname, Employee::getLastname)
+                .containsExactly(DEFAULT_STRING, "lastname1");
     }
 }

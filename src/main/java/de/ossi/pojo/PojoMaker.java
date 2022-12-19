@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
  * TODO doesnt work with records, because their setters dont have the "set" Prefix
  * TODO Inheritance isnt supported
  * TODO Should primitves and their wrappers be handled differently?
+ * TODO option to set setter method prefix
  */
 public class PojoMaker<B> {
 
@@ -23,8 +24,9 @@ public class PojoMaker<B> {
     private static final String SETTER_PREFIX = "set";
     private static final String NO_NAME = "";
     private final Class<B> beanClass;
-    private final Set<PropertySupplier<?>> propertySuppliers = initDefaultPropertySuppliers();
+    private final Set<PropertySupplier<?>> propertySuppliers = new HashSet<>();
     private final List<Setter> setters;
+    private boolean usingDefaultSuppliers = true;
 
     public PojoMaker(Class<B> beanClass) {
         this.beanClass = beanClass;
@@ -32,12 +34,18 @@ public class PojoMaker<B> {
     }
 
     public <T> PojoMaker<B> withValue(Class<T> clazz, Supplier<T> supplier) {
-        return withValue(clazz, NO_NAME, supplier);
+        PropertySupplier<T> newSupplier = new PropertySupplier<>(clazz, NO_NAME, supplier);
+        return addSupplier(newSupplier);
     }
 
     public <T> PojoMaker<B> withValue(Class<T> clazz, String propertyName, Supplier<T> supplier) {
         checkPropertyName(propertyName);
         PropertySupplier<T> newSupplier = new PropertySupplier<>(clazz, propertyName, supplier);
+        addSupplier(newSupplier);
+        return this;
+    }
+
+    public <T> PojoMaker<B> addSupplier(PropertySupplier<T> newSupplier) {
         propertySuppliers.remove(newSupplier);
         propertySuppliers.add(newSupplier);
         return this;
@@ -45,8 +53,18 @@ public class PojoMaker<B> {
 
     private void checkPropertyName(String propertyName) {
         if (NO_NAME.equals(propertyName)) {
-            throw new PropertyNameException("The PropertNname can not be empty.");
+            throw new PropertyNameException("The Propertname can not be empty.");
         }
+    }
+
+    public PojoMaker<B> usingNoDefaultSuppliers() {
+        usingDefaultSuppliers = false;
+        return this;
+    }
+
+    public PojoMaker<B> usingDefaultSuppliers() {
+        usingDefaultSuppliers = true;
+        return this;
     }
 
     public B make() {
@@ -61,6 +79,10 @@ public class PojoMaker<B> {
     }
 
     private void populate(B bean) throws IllegalAccessException, InvocationTargetException {
+        if (usingDefaultSuppliers) {
+            //Set only adds if no default Supplier is already provided
+            propertySuppliers.addAll(createDefaultPropertySuppliers());
+        }
         Map<Setter, Optional<PropertySupplier<?>>> settersToPopulate = setters.stream()
                 //cant have duplicate keys, because a class can only have on methode with the same name
                 .collect(Collectors.toMap(Function.identity(), this::getPropertySupplier));
@@ -99,7 +121,7 @@ public class PojoMaker<B> {
         return method.getName().startsWith(SETTER_PREFIX) && method.getParameterCount() == 1;
     }
 
-    private Set<PropertySupplier<?>> initDefaultPropertySuppliers() {
+    private Set<PropertySupplier<?>> createDefaultPropertySuppliers() {
         Set<PropertySupplier<?>> defaultPropertySupplier = new HashSet<>();
 
         defaultPropertySupplier.add(new PropertySupplier<>(Integer.class, NO_NAME, DEFAULT_NUMBER::intValue));
@@ -113,6 +135,7 @@ public class PojoMaker<B> {
         defaultPropertySupplier.add(new PropertySupplier<>(LocalDateTime.class, NO_NAME, () -> DEFAULT_LOCALDATETIME));
         return defaultPropertySupplier;
     }
+
 
     private record Setter(Type type, Method setter) {
         String toPropertyName() {
