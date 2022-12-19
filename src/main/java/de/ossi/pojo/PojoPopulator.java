@@ -13,8 +13,9 @@ import java.util.stream.Collectors;
 
 /**
  * TODO Inheritance isn't supported
+ * TODO Readme
  */
-public class PojoMaker<B> {
+public class PojoPopulator<B> {
 
     public static final String DEFAULT_STRING = "string";
     public static final Number DEFAULT_NUMBER = 1;
@@ -26,18 +27,18 @@ public class PojoMaker<B> {
     private boolean usingDefaultSuppliers = true;
     private String setterPrefix = DEFAULT_SETTER_PREFIX;
 
-    public PojoMaker(Class<B> beanClass) {
+    public PojoPopulator(Class<B> beanClass) {
         this.beanClass = beanClass;
     }
 
     /**
      * Sets a supplier to be used to populate <b>>all</b properties of the specified type in the bean.
-     * But only if no other property supplier specified by {@link PojoMaker#withValue(String, Supplier)}.
+     * But only if no other property supplier specified by {@link PojoPopulator#withValue(String, Supplier)}.
      *
      * @param propertyClass the Type of the property fields be populated
      * @param supplier      the supplier to be used to populate the property fields
      */
-    public <T> PojoMaker<B> withValue(@NonNull Class<T> propertyClass, Supplier<T> supplier) {
+    public <T> PojoPopulator<B> withValue(@NonNull Class<T> propertyClass, Supplier<T> supplier) {
         PropertySupplier<T> newSupplier = new PropertySupplier<>(propertyClass, null, supplier);
         addSupplier(newSupplier);
         return this;
@@ -46,12 +47,12 @@ public class PojoMaker<B> {
     /**
      * Sets a supplier to be used to populate the specified field in the bean with the property name.
      * The type of the object provided by the supplier must be the same as the property field.
-     * Will be used prior to the supplier provided by {@link PojoMaker#withValue(Class, Supplier)}.
+     * Will be used prior to the supplier provided by {@link PojoPopulator#withValue(Class, Supplier)}.
      *
      * @param propertyName <b>cannot be empty!</b>
      * @param supplier     the supplier to be used to populate the property field
      */
-    public <T> PojoMaker<B> withValue(@NonNull String propertyName, Supplier<T> supplier) {
+    public <T> PojoPopulator<B> withValue(@NonNull String propertyName, Supplier<T> supplier) {
         checkPropertyName(propertyName);
         PropertySupplier<T> newSupplier = new PropertySupplier<>(null, propertyName, supplier);
         addSupplier(newSupplier);
@@ -73,7 +74,7 @@ public class PojoMaker<B> {
      * Sets the option to <b>not</b> use default suppliers to populate the property fields.
      * If no other suppliers are provided for a field type, these fields will not be initialized -> null.
      */
-    public PojoMaker<B> usingNoDefaultSuppliers() {
+    public PojoPopulator<B> usingNoDefaultSuppliers() {
         usingDefaultSuppliers = false;
         return this;
     }
@@ -82,17 +83,17 @@ public class PojoMaker<B> {
     /**
      * Sets the option to <b>use</b> default suppliers to populate the property fields.
      */
-    public PojoMaker<B> usingDefaultSuppliers() {
+    public PojoPopulator<B> usingDefaultSuppliers() {
         usingDefaultSuppliers = true;
         return this;
     }
 
-    public PojoMaker<B> usingSetterPrefix(String setterPrefix) {
+    public PojoPopulator<B> usingSetterPrefix(String setterPrefix) {
         this.setterPrefix = setterPrefix;
         return this;
     }
 
-    public PojoMaker<B> usingNoSetterPrefix() {
+    public PojoPopulator<B> usingNoSetterPrefix() {
         this.setterPrefix = "";
         return this;
     }
