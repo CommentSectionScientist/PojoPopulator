@@ -1,9 +1,9 @@
 package de.ossi.pojo;
 
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import static de.ossi.pojo.PojoMaker.*;
+import static org.assertj.core.api.Assertions.*;
 
 class PojoMakerTest {
 
@@ -13,7 +13,7 @@ class PojoMakerTest {
         //when
         Employee employee = new PojoMaker<>(Employee.class).make();
         //then
-        Assertions.assertThat(employee)
+        assertThat(employee)
                 .extracting(Employee::getId, Employee::getFirstname, Employee::getStartTime)
                 .containsExactly(DEFAULT_NUMBER, DEFAULT_STRING, DEFAULT_LOCALDATETIME);
     }
@@ -23,11 +23,11 @@ class PojoMakerTest {
         //given
         //when
         Employee employee = new PojoMaker<>(Employee.class)
-                .withPropertyValue(String.class, "firstname", () -> "firstname1")
-                .withPropertyValue(String.class, "lastname", () -> "lastname1")
+                .withValue("firstname", () -> "firstname1")
+                .withValue("lastname", () -> "lastname1")
                 .make();
         //then
-        Assertions.assertThat(employee)
+        assertThat(employee)
                 .extracting(Employee::getFirstname, Employee::getLastname, Employee::getCity)
                 .containsExactly("firstname1", "lastname1", DEFAULT_STRING);
     }
@@ -37,10 +37,10 @@ class PojoMakerTest {
         //given
         //when
         Employee employee = new PojoMaker<>(Employee.class)
-                .withPropertyValue(String.class, "setProperty", () -> "asd")
+                .withValue("setProperty", () -> "asd")
                 .make();
         //then
-        Assertions.assertThat(employee)
+        assertThat(employee)
                 .extracting(Employee::getSetProperty)
                 .isEqualTo("asd");
     }
@@ -50,11 +50,11 @@ class PojoMakerTest {
         //given
         //when
         Employee employee = new PojoMaker<>(Employee.class)
-                .withPropertyValue(String.class, "firstname", () -> "1")
-                .withPropertyValue(String.class, "firstname", () -> "2")
+                .withValue("firstname", () -> "1")
+                .withValue("firstname", () -> "2")
                 .make();
         //then
-        Assertions.assertThat(employee)
+        assertThat(employee)
                 .extracting(Employee::getFirstname)
                 .isEqualTo("2");
     }
@@ -64,11 +64,11 @@ class PojoMakerTest {
         //given
         //when
         Employee employee = new PojoMaker<>(Employee.class)
-                .withDefaultValue(double.class, () -> 2.0)
-                .withPropertyValue(boolean.class, "active", () -> true)
+                .withValue(double.class, () -> 2.0)
+                .withValue("active", () -> true)
                 .make();
         //then
-        Assertions.assertThat(employee)
+        assertThat(employee)
                 .extracting(Employee::getSalary, Employee::isActive)
                 .containsExactly(2.0, true);
     }
@@ -78,9 +78,29 @@ class PojoMakerTest {
         //given
         //when
         //then
-        Assertions.assertThatException().isThrownBy(() ->
-                        new PojoMaker<>(Employee.class).withPropertyValue(String.class, "", () -> "asd"))
-                .isInstanceOf(PropertyNameException.class);
+        assertThatIllegalArgumentException().isThrownBy(() ->
+                        new PojoMaker<>(Employee.class).withValue("", () -> "asd"))
+                .withMessageContaining("property name");
+    }
+
+    @Test
+    void nullPropertyNameShouldThrowException() {
+        //given
+        //when
+        //then
+        assertThatNullPointerException().isThrownBy(() ->
+                        new PojoMaker<>(Employee.class).withValue((String) null, () -> "asd"))
+                .withMessageContaining("propertyName");
+    }
+
+    @Test
+    void emptyClassShouldThrowException() {
+        //given
+        //when
+        //then
+        assertThatNullPointerException().isThrownBy(() ->
+                        new PojoMaker<>(Employee.class).withValue((Class<String>) null, () -> "asd"))
+                .withMessageContaining("propertyClass");
     }
 
     @Test
@@ -88,13 +108,13 @@ class PojoMakerTest {
         //given
         //when
         Employee employee = new PojoMaker<>(Employee.class)
-                .withPropertyValue(String.class, "lastname", () -> "lastname1")
+                .withValue("lastname", () -> "lastname1")
                 .usingNoDefaultSuppliers()
                 .usingDefaultSuppliers()
                 .usingNoDefaultSuppliers()
                 .make();
         //then
-        Assertions.assertThat(employee)
+        assertThat(employee)
                 .extracting(Employee::getFirstname, Employee::getLastname)
                 .containsExactly(null, "lastname1");
     }
@@ -104,13 +124,13 @@ class PojoMakerTest {
         //given
         //when
         Employee employee = new PojoMaker<>(Employee.class)
-                .withPropertyValue(String.class, "lastname", () -> "lastname1")
+                .withValue("lastname", () -> "lastname1")
                 .usingDefaultSuppliers()
                 .usingNoDefaultSuppliers()
                 .usingDefaultSuppliers()
                 .make();
         //then
-        Assertions.assertThat(employee)
+        assertThat(employee)
                 .extracting(Employee::getFirstname, Employee::getLastname)
                 .containsExactly(DEFAULT_STRING, "lastname1");
     }
@@ -120,11 +140,11 @@ class PojoMakerTest {
         //given
         //when
         Employee employee = new PojoMaker<>(Employee.class)
-                .withPropertyValue(String.class, "noPrefix", () -> "asd")
+                .withValue("noPrefix", () -> "asd")
                 .usingNoSetterPrefix()
                 .make();
         //then
-        Assertions.assertThat(employee)
+        assertThat(employee)
                 .extracting(Employee::noPrefix)
                 .isEqualTo("asd");
     }
@@ -137,7 +157,7 @@ class PojoMakerTest {
                 .usingNoSetterPrefix()
                 .make();
         //then
-        Assertions.assertThat(employee)
+        assertThat(employee)
                 .extracting(Employee::noPrefix)
                 .isEqualTo(DEFAULT_STRING);
     }
@@ -147,11 +167,11 @@ class PojoMakerTest {
         //given
         //when
         Employee employee = new PojoMaker<>(Employee.class)
-                .withPropertyValue(String.class, "differentPrefix", () -> "asd")
+                .withValue("differentPrefix", () -> "asd")
                 .usingSetterPrefix("setze")
                 .make();
         //then
-        Assertions.assertThat(employee)
+        assertThat(employee)
                 .extracting(Employee::holeDifferentPrefix)
                 .isEqualTo("asd");
     }
@@ -164,7 +184,7 @@ class PojoMakerTest {
                 .usingSetterPrefix("setze")
                 .make();
         //then
-        Assertions.assertThat(employee)
+        assertThat(employee)
                 .extracting(Employee::holeDifferentPrefix)
                 .isEqualTo(DEFAULT_STRING);
     }
@@ -177,10 +197,10 @@ class PojoMakerTest {
         supervisor.setFirstname("supervisor");
         //when
         Employee employee = new PojoMaker<>(Employee.class)
-                .withPropertyValue(Employee.class, "supervisor", () -> supervisor)
+                .withValue("supervisor", () -> supervisor)
                 .make();
         //then
-        Assertions.assertThat(employee)
+        assertThat(employee)
                 .extracting(e -> e.getSupervisor().getFirstname())
                 .isEqualTo("supervisor");
     }
@@ -192,7 +212,7 @@ class PojoMakerTest {
         Employee employee = new PojoMaker<>(Employee.class)
                 .make();
         //then
-        Assertions.assertThat(employee)
+        assertThat(employee)
                 .extracting(Employee::getSupervisor)
                 .isNull();
     }
