@@ -15,7 +15,6 @@ import java.util.stream.Collectors;
  * TODO Should primitves and their wrappers be handled differently?
  * TODO option to set setter method prefix
  * TODO use lombok
- * TODO verschachtelte POJOs
  */
 public class PojoMaker<B> {
 

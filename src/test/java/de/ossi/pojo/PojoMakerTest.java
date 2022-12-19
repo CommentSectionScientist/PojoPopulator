@@ -170,4 +170,31 @@ class PojoMakerTest {
     }
 
 
+    @Test
+    void pojoFieldInPojoShouldBePopulated() {
+        //given
+        Employee supervisor = new Employee();
+        supervisor.setFirstname("supervisor");
+        //when
+        Employee employee = new PojoMaker<>(Employee.class)
+                .withPropertyValue(Employee.class, "supervisor", () -> supervisor)
+                .make();
+        //then
+        Assertions.assertThat(employee)
+                .extracting(e -> e.getSupervisor().getFirstname())
+                .isEqualTo("supervisor");
+    }
+
+    @Test
+    void pojoFieldInPojoShouldNotBePopulatedByDefault() {
+        //given
+        //when
+        Employee employee = new PojoMaker<>(Employee.class)
+                .make();
+        //then
+        Assertions.assertThat(employee)
+                .extracting(Employee::getSupervisor)
+                .isNull();
+    }
+
 }
