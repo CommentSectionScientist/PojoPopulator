@@ -23,8 +23,8 @@ class PojoMakerTest {
         //given
         //when
         Employee employee = new PojoMaker<>(Employee.class)
-                .withValue(String.class, "firstname", () -> "firstname1")
-                .withValue(String.class, "lastname", () -> "lastname1")
+                .withPropertyValue(String.class, "firstname", () -> "firstname1")
+                .withPropertyValue(String.class, "lastname", () -> "lastname1")
                 .make();
         //then
         Assertions.assertThat(employee)
@@ -37,7 +37,7 @@ class PojoMakerTest {
         //given
         //when
         Employee employee = new PojoMaker<>(Employee.class)
-                .withValue(String.class, "setProperty", () -> "asd")
+                .withPropertyValue(String.class, "setProperty", () -> "asd")
                 .make();
         //then
         Assertions.assertThat(employee)
@@ -50,8 +50,8 @@ class PojoMakerTest {
         //given
         //when
         Employee employee = new PojoMaker<>(Employee.class)
-                .withValue(String.class, "firstname", () -> "1")
-                .withValue(String.class, "firstname", () -> "2")
+                .withPropertyValue(String.class, "firstname", () -> "1")
+                .withPropertyValue(String.class, "firstname", () -> "2")
                 .make();
         //then
         Assertions.assertThat(employee)
@@ -64,8 +64,8 @@ class PojoMakerTest {
         //given
         //when
         Employee employee = new PojoMaker<>(Employee.class)
-                .withValue(double.class, () -> 2.0)
-                .withValue(boolean.class, "active", () -> true)
+                .withDefaultValue(double.class, () -> 2.0)
+                .withPropertyValue(boolean.class, "active", () -> true)
                 .make();
         //then
         Assertions.assertThat(employee)
@@ -79,7 +79,7 @@ class PojoMakerTest {
         //when
         //then
         Assertions.assertThatException().isThrownBy(() ->
-                        new PojoMaker<>(Employee.class).withValue(String.class, "", () -> "asd"))
+                        new PojoMaker<>(Employee.class).withPropertyValue(String.class, "", () -> "asd"))
                 .isInstanceOf(PropertyNameException.class);
     }
 
@@ -88,7 +88,7 @@ class PojoMakerTest {
         //given
         //when
         Employee employee = new PojoMaker<>(Employee.class)
-                .withValue(String.class, "lastname", () -> "lastname1")
+                .withPropertyValue(String.class, "lastname", () -> "lastname1")
                 .usingNoDefaultSuppliers()
                 .usingDefaultSuppliers()
                 .usingNoDefaultSuppliers()
@@ -104,7 +104,7 @@ class PojoMakerTest {
         //given
         //when
         Employee employee = new PojoMaker<>(Employee.class)
-                .withValue(String.class, "lastname", () -> "lastname1")
+                .withPropertyValue(String.class, "lastname", () -> "lastname1")
                 .usingDefaultSuppliers()
                 .usingNoDefaultSuppliers()
                 .usingDefaultSuppliers()

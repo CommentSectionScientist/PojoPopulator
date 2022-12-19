@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
  * TODO Inheritance isnt supported
  * TODO Should primitves and their wrappers be handled differently?
  * TODO option to set setter method prefix
+ * TODO use lombok
  */
 public class PojoMaker<B> {
 
@@ -33,40 +34,72 @@ public class PojoMaker<B> {
         setters = getAllSetters(beanClass);
     }
 
-    public <T> PojoMaker<B> withValue(Class<T> clazz, Supplier<T> supplier) {
+    /**
+     * Sets a supplier to be used to populate all properties of the specified type.
+     * only if no other property supplier specified by {@link PojoMaker#withPropertyValue(Class, String, Supplier)}.
+     *
+     * @param clazz    the Type of the property fields be populated
+     * @param supplier the supplier to be used to populate the property fields
+     */
+    public <T> PojoMaker<B> withDefaultValue(Class<T> clazz, Supplier<T> supplier) {
         PropertySupplier<T> newSupplier = new PropertySupplier<>(clazz, NO_NAME, supplier);
         return addSupplier(newSupplier);
     }
 
-    public <T> PojoMaker<B> withValue(Class<T> clazz, String propertyName, Supplier<T> supplier) {
+    /**
+     * Sets a supplier to be used to populate the specified property of the type provided.
+     * Will be used prior to the supplier provided by {@link PojoMaker#withDefaultValue(Class, Supplier)}.
+     *
+     * @param clazz        the Type of the property field to be populated
+     * @param propertyName <b>cannot be empty!</b>
+     * @param supplier     the supplier to be used to populate the property field
+     */
+    public <T> PojoMaker<B> withPropertyValue(Class<T> clazz, String propertyName, Supplier<T> supplier) {
         checkPropertyName(propertyName);
         PropertySupplier<T> newSupplier = new PropertySupplier<>(clazz, propertyName, supplier);
         addSupplier(newSupplier);
         return this;
     }
 
-    public <T> PojoMaker<B> addSupplier(PropertySupplier<T> newSupplier) {
+    private <T> PojoMaker<B> addSupplier(PropertySupplier<T> newSupplier) {
         propertySuppliers.remove(newSupplier);
         propertySuppliers.add(newSupplier);
         return this;
     }
 
     private void checkPropertyName(String propertyName) {
-        if (NO_NAME.equals(propertyName)) {
+        if (propertyName == null || NO_NAME.equals(propertyName)) {
             throw new PropertyNameException("The Propertname can not be empty.");
         }
     }
 
+    /**
+     * Sets the option to <b>not</b> use default suppliers to populate the property fields.
+     * If no other suppliers are provided for a field type, these fields will not be initialized -> null.
+     */
     public PojoMaker<B> usingNoDefaultSuppliers() {
         usingDefaultSuppliers = false;
         return this;
     }
 
+
+    /**
+     * Sets the option to <b>use</b> default suppliers to populate the property fields.
+     */
     public PojoMaker<B> usingDefaultSuppliers() {
         usingDefaultSuppliers = true;
         return this;
     }
 
+    /**
+     * Populates the bean property fields with the suppliers provided or default suppliers of not otherwise specified.
+     * The NoArgs Constructor has to be public accessable or a {@link RuntimeException} may be thrown.
+     * Invokes all Setters per Reflection.
+     *
+     * @see Class#getDeclaredConstructor(Class[])
+     * @see java.lang.reflect.Constructor#newInstance(Object...)
+     * @see Method#invoke(Object, Object...)
+     */
     public B make() {
         try {
             B bean = beanClass.getDeclaredConstructor().newInstance();
@@ -94,6 +127,12 @@ public class PojoMaker<B> {
                 }));
     }
 
+    /**
+     * Search for a matching property supplier.
+     * If a supplier matching the class & propertyname, then this one will be used.
+     * If a supplier only matching the class is found, then this one will be used.
+     * If not supplier matching is found, the Optional returned is empty.
+     */
     private Optional<PropertySupplier<?>> getPropertySupplier(Setter setter) {
         List<PropertySupplier<?>> equalClassSuppliers = propertySuppliers.stream()
                 .filter(s -> s.type == setter.type)
@@ -138,6 +177,10 @@ public class PojoMaker<B> {
 
 
     private record Setter(Type type, Method setter) {
+        /**
+         * Tries to find the porpertyname from the name of its setter method name.
+         * Presumes, that the setter method has a SETTER_PREFIX following by an upper case letter followed by the name of the property.
+         */
         String toPropertyName() {
             String nameWithoutSetPrefix = setter.getName().replaceFirst(SETTER_PREFIX, "");
             return Character.toLowerCase(nameWithoutSetPrefix.charAt(0)) + nameWithoutSetPrefix.substring(1);
