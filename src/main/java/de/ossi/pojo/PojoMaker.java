@@ -14,7 +14,6 @@ import java.util.stream.Collectors;
  * TODO Inheritance isnt supported
  * TODO Should primitves and their wrappers be handled differently?
  * TODO option to set setter method prefix
- * TODO use lombok
  */
 public class PojoMaker<B> {
 
