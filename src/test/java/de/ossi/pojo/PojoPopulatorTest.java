@@ -199,4 +199,18 @@ class PojoPopulatorTest {
                 .isNull();
     }
 
+    @Test
+    void whenUsingRandomValuesShouldBePopulated() {
+        //given
+        //when
+        Employee employee = new PojoPopulator<>(Employee.class)
+                .usingRandomDefaultValues()
+                .make();
+        //then
+        //Testing of Random Values is not possible
+        assertThat(employee)
+                .extracting(Employee::getStartDay, Employee::getStartTime, Employee::getId, Employee::getTechnical_id, Employee::getSalary, Employee::getSalaryf)
+                .doesNotContainNull();
+    }
+
 }

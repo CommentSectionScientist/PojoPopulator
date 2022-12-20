@@ -4,6 +4,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @SuppressWarnings("unused")
@@ -15,8 +16,11 @@ public class Employee {
     private String setProperty;
     private String city;
     private Integer id;
+    private Long technical_id;
     private LocalDateTime startTime;
+    private LocalDate startDay;
     private double salary;
+    private Float salaryf;
     private boolean active;
     private Employee supervisor;
 

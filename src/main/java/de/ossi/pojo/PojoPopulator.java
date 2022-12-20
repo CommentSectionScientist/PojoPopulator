@@ -5,7 +5,9 @@ import lombok.NonNull;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -21,12 +23,18 @@ public class PojoPopulator<B> {
 
     public static final String DEFAULT_STRING = "string";
     public static final Number DEFAULT_NUMBER = 1;
-    public static final LocalDateTime DEFAULT_LOCALDATETIME = LocalDateTime.of(1970, 1, 1, 1, 1);
+    public static final LocalDate DEFAULT_LOCALDATE = LocalDate.of(1970, 1, 1);
+    public static final LocalDate LOCALDATE_2022 = LocalDate.of(2022, 1, 1);
+    public static final LocalDateTime DEFAULT_LOCALDATETIME = DEFAULT_LOCALDATE.atStartOfDay();
+    public static final LocalDateTime LOCALDATETIME_2022 = LOCALDATE_2022.atStartOfDay();
     private static final String DEFAULT_SETTER_PREFIX = "set";
 
     private final Set<PropertySupplier<?>> propertySuppliers = new HashSet<>();
+    private final Random rnd = new Random();
     private final Class<B> beanClass;
+
     private boolean usingDefaultSuppliers = true;
+    private boolean usingRandomDefaultValues = false;
     private String setterPrefix = DEFAULT_SETTER_PREFIX;
 
     public PojoPopulator(Class<B> beanClass) {
@@ -91,6 +99,11 @@ public class PojoPopulator<B> {
         return this;
     }
 
+    public PojoPopulator<B> usingRandomDefaultValues() {
+        this.usingRandomDefaultValues = true;
+        return this;
+    }
+
     /**
      * Populates the bean property fields with the suppliers provided or default suppliers of not otherwise specified.
      * The NoArgs Constructor has to be public accessible or a {@link RuntimeException} may be thrown.
@@ -150,7 +163,6 @@ public class PojoPopulator<B> {
                 .findAny();
     }
 
-
     @SafeVarargs
     private List<Setter> getAllSetters(Class<B> beanClass, @NonNull Predicate<Method>... filters) {
         Predicate<Method> allPredicate = Arrays.stream(filters).reduce(Predicate::and).orElse(p -> true);
@@ -168,19 +180,56 @@ public class PojoPopulator<B> {
         return method.getParameterCount() == 1;
     }
 
-    private Set<PropertySupplier<?>> createDefaultPropertySuppliers() {
-        Set<PropertySupplier<?>> defaultPropertySupplier = new HashSet<>();
+    private List<PropertySupplier<?>> createDefaultPropertySuppliers() {
+        return List.of(
+                new PropertySupplier<>(Integer.class, null, this::intValue),
+                new PropertySupplier<>(Long.class, null, this::longValue),
+                new PropertySupplier<>(Double.class, null, this::doubleValue),
+                new PropertySupplier<>(Float.class, null, this::floatValue),
 
-        defaultPropertySupplier.add(new PropertySupplier<>(Integer.class, null, DEFAULT_NUMBER::intValue));
-        defaultPropertySupplier.add(new PropertySupplier<>(Long.class, null, DEFAULT_NUMBER::longValue));
-        defaultPropertySupplier.add(new PropertySupplier<>(Double.class, null, DEFAULT_NUMBER::doubleValue));
-        defaultPropertySupplier.add(new PropertySupplier<>(Float.class, null, DEFAULT_NUMBER::floatValue));
+                new PropertySupplier<>(Boolean.class, null, this::booleanValue),
 
-        defaultPropertySupplier.add(new PropertySupplier<>(Boolean.class, null, () -> false));
+                new PropertySupplier<>(String.class, null, () -> DEFAULT_STRING),
+                new PropertySupplier<>(LocalDateTime.class, null, this::localDateTimeValue),
+                new PropertySupplier<>(LocalDate.class, null, this::localDateValue));
+    }
 
-        defaultPropertySupplier.add(new PropertySupplier<>(String.class, null, () -> DEFAULT_STRING));
-        defaultPropertySupplier.add(new PropertySupplier<>(LocalDateTime.class, null, () -> DEFAULT_LOCALDATETIME));
-        return defaultPropertySupplier;
+    private int intValue() {
+        return usingRandomDefaultValues ? rnd.nextInt() : DEFAULT_NUMBER.intValue();
+    }
+
+    private long longValue() {
+        return usingRandomDefaultValues ? rnd.nextLong() : DEFAULT_NUMBER.longValue();
+    }
+
+    private double doubleValue() {
+        return usingRandomDefaultValues ? rnd.nextDouble() : DEFAULT_NUMBER.doubleValue();
+    }
+
+    private float floatValue() {
+        return usingRandomDefaultValues ? rnd.nextFloat() : DEFAULT_NUMBER.floatValue();
+    }
+
+    private boolean booleanValue() {
+        return usingRandomDefaultValues && rnd.nextBoolean();
+    }
+
+    private LocalDateTime localDateTimeValue() {
+        if (usingRandomDefaultValues) {
+            long secondsTill2022 = ChronoUnit.SECONDS.between(DEFAULT_LOCALDATETIME, LOCALDATETIME_2022);
+            return DEFAULT_LOCALDATETIME.plusSeconds(rnd.nextLong(secondsTill2022));
+        } else {
+            return DEFAULT_LOCALDATETIME;
+        }
+    }
+
+    private LocalDate localDateValue() {
+        if (usingRandomDefaultValues) {
+            long daysTill2022 = ChronoUnit.DAYS.between(DEFAULT_LOCALDATE, LOCALDATE_2022);
+            return DEFAULT_LOCALDATE.plusDays(rnd.nextLong(daysTill2022));
+        } else {
+            return DEFAULT_LOCALDATE;
+        }
     }
 
     /**
