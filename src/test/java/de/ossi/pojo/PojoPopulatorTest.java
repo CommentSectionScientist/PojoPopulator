@@ -110,29 +110,11 @@ class PojoPopulatorTest {
         Employee employee = new PojoPopulator<>(Employee.class)
                 .withValue("lastname", () -> "lastname1")
                 .usingNoDefaultSuppliers()
-                .usingDefaultSuppliers()
-                .usingNoDefaultSuppliers()
                 .make();
         //then
         assertThat(employee)
                 .extracting(Employee::getFirstname, Employee::getLastname)
                 .containsExactly(null, "lastname1");
-    }
-
-    @Test
-    void whenUsingDefaultSuppliersShouldPopulateBean() {
-        //given
-        //when
-        Employee employee = new PojoPopulator<>(Employee.class)
-                .withValue("lastname", () -> "lastname1")
-                .usingDefaultSuppliers()
-                .usingNoDefaultSuppliers()
-                .usingDefaultSuppliers()
-                .make();
-        //then
-        assertThat(employee)
-                .extracting(Employee::getFirstname, Employee::getLastname)
-                .containsExactly(DEFAULT_STRING, "lastname1");
     }
 
     @Test

@@ -81,15 +81,6 @@ public class PojoPopulator<B> {
         return this;
     }
 
-
-    /**
-     * Sets the option to <b>use</b> default suppliers to populate the property fields.
-     */
-    public PojoPopulator<B> usingDefaultSuppliers() {
-        usingDefaultSuppliers = true;
-        return this;
-    }
-
     public PojoPopulator<B> usingSetterPrefix(String setterPrefix) {
         this.setterPrefix = setterPrefix;
         return this;
