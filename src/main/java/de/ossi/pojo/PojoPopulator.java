@@ -8,6 +8,7 @@ import java.lang.reflect.Type;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -123,7 +124,7 @@ public class PojoPopulator<B> {
             //Set only adds if no other supplier is already present
             propertySuppliers.addAll(createDefaultPropertySuppliers());
         }
-        Map<Setter, Optional<PropertySupplier<?>>> settersToPopulate = getAllSetters(beanClass).stream()
+        Map<Setter, Optional<PropertySupplier<?>>> settersToPopulate = getAllSetters(beanClass, this::withPrefix, this::withOneArgument).stream()
                 //cant have duplicate keys, because a class can only have on methode with the same name
                 .collect(Collectors.toMap(Function.identity(), this::getPropertySupplier));
         settersToPopulate.entrySet()
@@ -158,15 +159,21 @@ public class PojoPopulator<B> {
     }
 
 
-    private List<Setter> getAllSetters(Class<B> beanClass) {
+    @SafeVarargs
+    private List<Setter> getAllSetters(Class<B> beanClass, @NonNull Predicate<Method>... filters) {
+        Predicate<Method> allPredicate = Arrays.stream(filters).reduce(Predicate::and).orElse(p -> true);
         return Arrays.stream(beanClass.getMethods())
-                .filter(this::isSetter)
+                .filter(allPredicate)
                 .map(m -> new Setter(m.getParameterTypes()[0], m))
                 .toList();
     }
 
-    private boolean isSetter(Method method) {
-        return method.getName().startsWith(setterPrefix) && method.getParameterCount() == 1;
+    private boolean withPrefix(Method method) {
+        return method.getName().startsWith(setterPrefix);
+    }
+
+    private boolean withOneArgument(Method method) {
+        return method.getParameterCount() == 1;
     }
 
     private Set<PropertySupplier<?>> createDefaultPropertySuppliers() {
