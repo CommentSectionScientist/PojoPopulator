@@ -10,7 +10,6 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -129,14 +128,15 @@ public class PojoPopulator<B> {
             //Set only adds if no other supplier is already present
             propertySuppliers.addAll(createDefaultPropertySuppliers());
         }
-        Map<Setter, Optional<PropertySupplier<?>>> settersToPopulate = getAllSetters(beanClass, this::withPrefix, this::withOneArgument).stream()
+        Map<Setter, Optional<PropertySupplier<?>>> settersToPopulate = SettersReflectionUtil.getAllSetters(beanClass, this::withPrefix, this::withOneArgument)
+                .stream()
                 //cant have duplicate keys, because a class can only have on methode with the same name
                 .collect(Collectors.toMap(Function.identity(), this::getPropertySupplier));
         settersToPopulate.entrySet()
                 .forEach(unchecked(e -> {
                     if (e.getValue().isPresent()) {
                         Object suppliedValue = e.getValue().get().supplier.get();
-                        e.getKey().setter.invoke(bean, suppliedValue);
+                        e.getKey().setter().invoke(bean, suppliedValue);
                     }
                 }));
     }
@@ -151,25 +151,16 @@ public class PojoPopulator<B> {
         Optional<PropertySupplier<?>> equalFieldNameSupplier = propertySuppliers.stream()
                 //the type of the field is irrelevant, because there can only be one field with the same name in the class
                 .filter(s -> s.type == null)
-                .filter(p -> p.propertyName.equals(toPropertyName(setter)))
+                .filter(p -> p.propertyName.equals(setter.toPropertyName(setterPrefix)))
                 .findAny();
         if (equalFieldNameSupplier.isPresent()) {
             return equalFieldNameSupplier;
         }
         //get default PropertySupplier
         return propertySuppliers.stream()
-                .filter(s -> s.type == setter.type)
+                .filter(s -> s.type == setter.type())
                 .filter(p -> p.propertyName == null)
                 .findAny();
-    }
-
-    @SafeVarargs
-    private List<Setter> getAllSetters(Class<B> beanClass, @NonNull Predicate<Method>... filters) {
-        Predicate<Method> allPredicate = Arrays.stream(filters).reduce(Predicate::and).orElse(p -> true);
-        return Arrays.stream(beanClass.getMethods())
-                .filter(allPredicate)
-                .map(m -> new Setter(m.getParameterTypes()[0], m))
-                .toList();
     }
 
     private boolean withPrefix(Method method) {
@@ -230,20 +221,6 @@ public class PojoPopulator<B> {
         } else {
             return DEFAULT_LOCALDATE;
         }
-    }
-
-    /**
-     * Tries to find the property name from the name of its setter method name.
-     * Presumes, that the setter method has a SETTER_PREFIX followed by an upper case letter followed by the name of the property.
-     */
-    String toPropertyName(Setter setter) {
-        String nameWithoutSetPrefix = setter.setter.getName().replaceFirst(setterPrefix, "");
-        return Character.toLowerCase(nameWithoutSetPrefix.charAt(0)) + nameWithoutSetPrefix.substring(1);
-    }
-
-
-    private record Setter(Type type, Method setter) {
-
     }
 
     private record PropertySupplier<T>(Type type, String propertyName, Supplier<T> supplier) {
