@@ -11,4 +11,3 @@
 
 - Inheritance isn't supported
 - Option to use randomly generated Default Values
-- Reading Setters should be in a separate util class
