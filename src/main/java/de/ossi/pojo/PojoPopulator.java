@@ -1,6 +1,8 @@
 package de.ossi.pojo;
 
+import lombok.AccessLevel;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -9,6 +11,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -18,6 +21,7 @@ import static de.ossi.pojo.UncheckedUtil.unchecked;
 /**
  *
  */
+@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public class PojoPopulator<B> {
 
     public static final String DEFAULT_STRING = "string";
@@ -27,17 +31,28 @@ public class PojoPopulator<B> {
     public static final LocalDateTime DEFAULT_LOCALDATETIME = DEFAULT_LOCALDATE.atStartOfDay();
     public static final LocalDateTime LOCALDATETIME_2022 = LOCALDATE_2022.atStartOfDay();
     private static final String DEFAULT_SETTER_PREFIX = "set";
+    private final Class<B> beanClass;
 
     private final Set<PropertySupplier<?>> propertySuppliers = new HashSet<>();
     private final Random rnd = new Random();
-    private final Class<B> beanClass;
 
     private boolean usingDefaultSuppliers = true;
     private boolean usingRandomDefaultValues = false;
     private String setterPrefix = DEFAULT_SETTER_PREFIX;
 
-    public PojoPopulator(Class<B> beanClass) {
-        this.beanClass = beanClass;
+    public static <T> T create(Class<T> beanClass, Consumer<PojoPopulator<T>> optionSetter) {
+        return createInternal(beanClass, optionSetter);
+    }
+
+    public static <T> T create(Class<T> beanClass) {
+        return createInternal(beanClass, c -> {
+        });
+    }
+
+    public static <T> T createInternal(Class<T> beanClass, Consumer<PojoPopulator<T>> optionSetter) {
+        PojoPopulator<T> pojoPopulator = new PojoPopulator<>(beanClass);
+        optionSetter.accept(pojoPopulator);
+        return pojoPopulator.make();
     }
 
     /**
