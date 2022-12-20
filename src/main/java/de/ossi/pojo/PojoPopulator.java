@@ -45,11 +45,10 @@ public class PojoPopulator<B> {
     }
 
     public static <T> T create(Class<T> beanClass) {
-        return createInternal(beanClass, c -> {
-        });
+        return createInternal(beanClass, c -> {});
     }
 
-    public static <T> T createInternal(Class<T> beanClass, Consumer<PojoPopulator<T>> optionSetter) {
+    private static <T> T createInternal(Class<T> beanClass, Consumer<PojoPopulator<T>> optionSetter) {
         PojoPopulator<T> pojoPopulator = new PojoPopulator<>(beanClass);
         optionSetter.accept(pojoPopulator);
         return pojoPopulator.make();
@@ -241,8 +240,12 @@ public class PojoPopulator<B> {
     private record PropertySupplier<T>(Type type, String propertyName, Supplier<T> supplier) {
         @Override
         public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
             PropertySupplier<?> that = (PropertySupplier<?>) o;
             return Objects.equals(type, that.type) && Objects.equals(propertyName, that.propertyName);
         }
