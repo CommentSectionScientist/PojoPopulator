@@ -11,7 +11,7 @@ class PojoPopulatorTest {
     void beanShouldBePopulatedWithDefaultValues() {
         //given
         //when
-        Employee employee = new PojoPopulator<>(Employee.class).make();
+        Employee employee = PojoPopulator.create(Employee.class);
         //then
         assertThat(employee)
                 .extracting(Employee::getId, Employee::getFirstname, Employee::getStartTime)
@@ -22,10 +22,9 @@ class PojoPopulatorTest {
     void beanShouldBePopulatedWithSpecifiedValue() {
         //given
         //when
-        Employee employee = new PojoPopulator<>(Employee.class)
+        Employee employee = PojoPopulator.create(Employee.class, populator -> populator
                 .withValue("firstname", () -> "firstname1")
-                .withValue("lastname", () -> "lastname1")
-                .make();
+                .withValue("lastname", () -> "lastname1"));
         //then
         assertThat(employee)
                 .extracting(Employee::getFirstname, Employee::getLastname, Employee::getCity)
@@ -36,9 +35,8 @@ class PojoPopulatorTest {
     void propertyStartingWithSetInBeanShouldBePopulated() {
         //given
         //when
-        Employee employee = new PojoPopulator<>(Employee.class)
-                .withValue("setProperty", () -> "asd")
-                .make();
+        Employee employee = PojoPopulator.create(Employee.class, populator -> populator
+                .withValue("setProperty", () -> "asd"));
         //then
         assertThat(employee)
                 .extracting(Employee::getSetProperty)
@@ -49,10 +47,9 @@ class PojoPopulatorTest {
     void assigningTheSameClassTwiceShouldThrowException() {
         //given
         //when
-        Employee employee = new PojoPopulator<>(Employee.class)
+        Employee employee = PojoPopulator.create(Employee.class, populator -> populator
                 .withValue("firstname", () -> "1")
-                .withValue("firstname", () -> "2")
-                .make();
+                .withValue("firstname", () -> "2"));
         //then
         assertThat(employee)
                 .extracting(Employee::getFirstname)
@@ -63,10 +60,9 @@ class PojoPopulatorTest {
     void primitiveInBeanShouldBePopulated() {
         //given
         //when
-        Employee employee = new PojoPopulator<>(Employee.class)
+        Employee employee = PojoPopulator.create(Employee.class, populator -> populator
                 .withValue(double.class, () -> 2.0)
-                .withValue("active", () -> true)
-                .make();
+                .withValue("active", () -> true));
         //then
         assertThat(employee)
                 .extracting(Employee::getSalary, Employee::isActive)
@@ -79,7 +75,7 @@ class PojoPopulatorTest {
         //when
         //then
         assertThatIllegalArgumentException().isThrownBy(() ->
-                        new PojoPopulator<>(Employee.class).withValue("", () -> "asd"))
+                        PojoPopulator.create(Employee.class, populator -> populator.withValue("", () -> "asd")))
                 .withMessageContaining("property name");
     }
 
@@ -89,7 +85,7 @@ class PojoPopulatorTest {
         //when
         //then
         assertThatNullPointerException().isThrownBy(() ->
-                        new PojoPopulator<>(Employee.class).withValue((String) null, () -> "asd"))
+                        PojoPopulator.create(Employee.class, populator -> populator.withValue((String) null, () -> "asd")))
                 .withMessageContaining("propertyName");
     }
 
@@ -99,7 +95,7 @@ class PojoPopulatorTest {
         //when
         //then
         assertThatNullPointerException().isThrownBy(() ->
-                        new PojoPopulator<>(Employee.class).withValue((Class<String>) null, () -> "asd"))
+                        PojoPopulator.create(Employee.class, populator -> populator.withValue((Class<String>) null, () -> "asd")))
                 .withMessageContaining("propertyClass");
     }
 
@@ -107,10 +103,9 @@ class PojoPopulatorTest {
     void whenUsingNoDefaultSuppliersShouldNotPopulateBean() {
         //given
         //when
-        Employee employee = new PojoPopulator<>(Employee.class)
+        Employee employee = PojoPopulator.create(Employee.class, populator -> populator
                 .withValue("lastname", () -> "lastname1")
-                .usingNoDefaultSuppliers()
-                .make();
+                .usingNoDefaultSuppliers());
         //then
         assertThat(employee)
                 .extracting(Employee::getFirstname, Employee::getLastname)
@@ -121,10 +116,9 @@ class PojoPopulatorTest {
     void setterMethodWithoutPrefixShouldBePopulated() {
         //given
         //when
-        Employee employee = new PojoPopulator<>(Employee.class)
+        Employee employee = PojoPopulator.create(Employee.class, populator -> populator
                 .withValue("noPrefix", () -> "asd")
-                .usingNoSetterPrefix()
-                .make();
+                .usingNoSetterPrefix());
         //then
         assertThat(employee)
                 .extracting(Employee::noPrefix)
@@ -135,9 +129,7 @@ class PojoPopulatorTest {
     void setterMethodWithoutPrefixShouldBePopulatedByDefault() {
         //given
         //when
-        Employee employee = new PojoPopulator<>(Employee.class)
-                .usingNoSetterPrefix()
-                .make();
+        Employee employee = PojoPopulator.create(Employee.class, PojoPopulator::usingNoSetterPrefix);
         //then
         assertThat(employee)
                 .extracting(Employee::noPrefix)
@@ -148,10 +140,9 @@ class PojoPopulatorTest {
     void setterMethodWithDifferentPrefixShouldBePopulated() {
         //given
         //when
-        Employee employee = new PojoPopulator<>(Employee.class)
+        Employee employee = PojoPopulator.create(Employee.class, populator -> populator
                 .withValue("differentPrefix", () -> "asd")
-                .usingSetterPrefix("setze")
-                .make();
+                .usingSetterPrefix("setze"));
         //then
         assertThat(employee)
                 .extracting(Employee::holeDifferentPrefix)
@@ -162,9 +153,8 @@ class PojoPopulatorTest {
     void setterMethodWithDifferentPrefixShouldBePopulatedByDefault() {
         //given
         //when
-        Employee employee = new PojoPopulator<>(Employee.class)
-                .usingSetterPrefix("setze")
-                .make();
+        Employee employee = PojoPopulator.create(Employee.class, populator -> populator
+                .usingSetterPrefix("setze"));
         //then
         assertThat(employee)
                 .extracting(Employee::holeDifferentPrefix)
@@ -178,9 +168,8 @@ class PojoPopulatorTest {
         Employee supervisor = new Employee();
         supervisor.setFirstname("supervisor");
         //when
-        Employee employee = new PojoPopulator<>(Employee.class)
-                .withValue("supervisor", () -> supervisor)
-                .make();
+        Employee employee = PojoPopulator.create(Employee.class, populator -> populator
+                .withValue("supervisor", () -> supervisor));
         //then
         assertThat(employee)
                 .extracting(e -> e.getSupervisor().getFirstname())
@@ -191,8 +180,7 @@ class PojoPopulatorTest {
     void pojoFieldInPojoShouldNotBePopulatedByDefault() {
         //given
         //when
-        Employee employee = new PojoPopulator<>(Employee.class)
-                .make();
+        Employee employee = PojoPopulator.create(Employee.class);
         //then
         assertThat(employee)
                 .extracting(Employee::getSupervisor)
@@ -203,9 +191,7 @@ class PojoPopulatorTest {
     void whenUsingRandomValuesShouldBePopulated() {
         //given
         //when
-        Employee employee = new PojoPopulator<>(Employee.class)
-                .usingRandomDefaultValues()
-                .make();
+        Employee employee = PojoPopulator.create(Employee.class, PojoPopulator::usingRandomDefaultValues);
         //then
         //Testing of Random Values is not possible
         assertThat(employee)
