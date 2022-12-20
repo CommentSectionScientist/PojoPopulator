@@ -31,6 +31,7 @@ public class PojoPopulator<B> {
     public static final LocalDateTime DEFAULT_LOCALDATETIME = DEFAULT_LOCALDATE.atStartOfDay();
     public static final LocalDateTime LOCALDATETIME_2022 = LOCALDATE_2022.atStartOfDay();
     private static final String DEFAULT_SETTER_PREFIX = "set";
+    
     private final Class<B> beanClass;
 
     private final Set<PropertySupplier<?>> propertySuppliers = new HashSet<>();
