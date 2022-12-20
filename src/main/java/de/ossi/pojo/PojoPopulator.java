@@ -1,5 +1,6 @@
 package de.ossi.pojo;
 
+import de.ossi.pojo.SetterReflectionUtil.Setter;
 import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
