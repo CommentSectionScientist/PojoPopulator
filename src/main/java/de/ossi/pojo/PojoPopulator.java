@@ -12,6 +12,8 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import static de.ossi.pojo.UncheckedUtil.unchecked;
+
 /**
  * TODO Inheritance isn't supported
  * TODO Readme
@@ -128,7 +130,7 @@ public class PojoPopulator<B> {
                 //cant have duplicate keys, because a class can only have on methode with the same name
                 .collect(Collectors.toMap(Function.identity(), this::getPropertySupplier));
         settersToPopulate.entrySet()
-                .forEach(UncheckedUtil.unchecked(e -> {
+                .forEach(unchecked(e -> {
                     if (e.getValue().isPresent()) {
                         Object suppliedValue = e.getValue().get().supplier.get();
                         e.getKey().setter.invoke(bean, suppliedValue);
