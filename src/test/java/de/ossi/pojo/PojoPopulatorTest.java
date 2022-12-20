@@ -110,29 +110,11 @@ class PojoPopulatorTest {
         Employee employee = new PojoPopulator<>(Employee.class)
                 .withValue("lastname", () -> "lastname1")
                 .usingNoDefaultSuppliers()
-                .usingDefaultSuppliers()
-                .usingNoDefaultSuppliers()
                 .make();
         //then
         assertThat(employee)
                 .extracting(Employee::getFirstname, Employee::getLastname)
                 .containsExactly(null, "lastname1");
-    }
-
-    @Test
-    void whenUsingDefaultSuppliersShouldPopulateBean() {
-        //given
-        //when
-        Employee employee = new PojoPopulator<>(Employee.class)
-                .withValue("lastname", () -> "lastname1")
-                .usingDefaultSuppliers()
-                .usingNoDefaultSuppliers()
-                .usingDefaultSuppliers()
-                .make();
-        //then
-        assertThat(employee)
-                .extracting(Employee::getFirstname, Employee::getLastname)
-                .containsExactly(DEFAULT_STRING, "lastname1");
     }
 
     @Test
@@ -215,6 +197,20 @@ class PojoPopulatorTest {
         assertThat(employee)
                 .extracting(Employee::getSupervisor)
                 .isNull();
+    }
+
+    @Test
+    void whenUsingRandomValuesShouldBePopulated() {
+        //given
+        //when
+        Employee employee = new PojoPopulator<>(Employee.class)
+                .usingRandomDefaultValues()
+                .make();
+        //then
+        //Testing of Random Values is not possible
+        assertThat(employee)
+                .extracting(Employee::getStartDay, Employee::getStartTime, Employee::getId, Employee::getTechnical_id, Employee::getSalary, Employee::getSalaryf)
+                .doesNotContainNull();
     }
 
 }
