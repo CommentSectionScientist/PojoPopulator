@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 import static de.ossi.pojo.UncheckedUtil.unchecked;
 
 /**
- *
+ * Class to Create and Populate Java POJOs.
  */
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public class PojoPopulator<B> {
@@ -31,7 +31,7 @@ public class PojoPopulator<B> {
     public static final LocalDateTime DEFAULT_LOCALDATETIME = DEFAULT_LOCALDATE.atStartOfDay();
     public static final LocalDateTime LOCALDATETIME_2022 = LOCALDATE_2022.atStartOfDay();
     private static final String DEFAULT_SETTER_PREFIX = "set";
-    
+
     private final Class<B> beanClass;
 
     private final Set<PropertySupplier<?>> propertySuppliers = new HashSet<>();
@@ -41,10 +41,16 @@ public class PojoPopulator<B> {
     private boolean usingRandomDefaultValues = false;
     private String setterPrefix = DEFAULT_SETTER_PREFIX;
 
+    /**
+     * Create and Populate the POJO according to the provided options.
+     */
     public static <T> T create(Class<T> beanClass, Consumer<PojoPopulator<T>> optionSetter) {
         return createInternal(beanClass, optionSetter);
     }
 
+    /**
+     * Create and Populate the POJO with default values.
+     */
     public static <T> T create(Class<T> beanClass) {
         return createInternal(beanClass, c -> {});
     }
