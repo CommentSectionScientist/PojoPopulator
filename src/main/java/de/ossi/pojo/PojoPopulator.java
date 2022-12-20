@@ -128,7 +128,7 @@ public class PojoPopulator<B> {
             //Set only adds if no other supplier is already present
             propertySuppliers.addAll(createDefaultPropertySuppliers());
         }
-        Map<Setter, Optional<PropertySupplier<?>>> settersToPopulate = SettersReflectionUtil.getAllSetters(beanClass, this::withPrefix, this::withOneArgument)
+        Map<Setter, Optional<PropertySupplier<?>>> settersToPopulate = SetterReflectionUtil.getAllSetters(beanClass, this::withPrefix, this::withOneArgument)
                 .stream()
                 //cant have duplicate keys, because a class can only have on methode with the same name
                 .collect(Collectors.toMap(Function.identity(), this::getPropertySupplier));

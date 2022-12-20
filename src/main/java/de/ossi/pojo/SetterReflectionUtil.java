@@ -7,7 +7,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Predicate;
 
-public class SettersReflectionUtil {
+public class SetterReflectionUtil {
     @SafeVarargs
     static List<Setter> getAllSetters(Class<?> beanClass, @NonNull Predicate<Method>... filters) {
         Predicate<Method> allPredicate = Arrays.stream(filters).reduce(Predicate::and).orElse(p -> true);
