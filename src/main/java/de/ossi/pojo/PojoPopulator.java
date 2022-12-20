@@ -15,8 +15,7 @@ import java.util.stream.Collectors;
 import static de.ossi.pojo.UncheckedUtil.unchecked;
 
 /**
- * TODO Inheritance isn't supported
- * TODO Readme
+ *
  */
 public class PojoPopulator<B> {
 
