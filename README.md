@@ -1,5 +1,7 @@
 # PojoPopulator
 
+## This project was never finished. Use Instancio instead: https://github.com/instancio/instancio
+
 # Backlog
 
 ## Documentation
